@@ -1,0 +1,356 @@
+ Section 16: Reflection Questions
+
+
+
+ 16.1 Heuristic Functions
+ Q1. What does ( h(n) ) estimate?
+
+Answer:
+
+The heuristic function ( h(n) ) estimates the remaining cost from the current state to the goal state. It provides an informed guess based on domain knowledge, such as the physical geometry of the grid. Common examples include Manhattan distance and Euclidean distance, which approximate how far the agent still needs to travel to reach the goal...
+
+
+
+ Q2. Why does Manhattan distance correspond to a "relaxed problem"?
+
+Answer:
+
+Manhattan distance assumes a simplified version of the problem in which:
+
+- There are no obstacles or walls.
+- Every move costs exactly 1 unit.
+- Movement is restricted to horizontal and vertical directions.
+
+Because these constraints are removed, the resulting estimate is optimistic and therefore suitable as a heuristic..
+
+
+
+ Q3. What does it mean for one heuristic to dominate another?
+
+Answer:
+
+A heuristic dominates another if it always provides estimates that are greater than or equal to the other heuristic while still remaining admissible.
+
+In this grid problem:
+
+- Manhattan distance is always greater than or equal to Euclidean distance.
+- Both remain admissible.
+- Therefore, Manhattan distance dominates Euclidean distance.
+
+A dominating heuristic is generally preferred because it reduces the search space and causes A* to expand fewer nodes.
+
+
+
+ Q4. What happens if some terrain costs less than 1?
+
+Answer:
+
+If terrain costs can be less than 1, Manhattan distance may overestimate the true remaining cost.
+
+For example:
+ Suppose moving one tile costs 0.5...
+- Manhattan distance would estimate a cost of 1 for that move.
+
+Since the heuristic overestimates the true cost, it violates admissibility. As a result, A* can lose its guarantee of finding an optimal solution...
+
+
+
+ 16.2 Greedy Best-First Search
+
+ Q1. What information does Greedy Best-First Search ignore?
+
+Answer:
+
+Greedy Best-First Search considers only the heuristic value ( h(n) ) and completely ignores ( g(n) ), the cost already incurred.
+
+This means the algorithm always chooses the node that appears closest to the goal, even if reaching that node was extremely expensive.
+
+In the turbulence map experiment, Greedy Search was attracted to regions near the goal despite their high traversal costs.
+
+
+ Q2. Does expanding fewer nodes necessarily mean an algorithm is better?
+
+Answer:
+
+No.
+
+Expanding fewer nodes only means the algorithm required less computation. It does not guarantee a high-quality solution.
+
+An algorithm that quickly finds a poor path may be less useful than one that takes longer but finds the optimal path. For real-world robotics, path quality is often more important than raw speed...
+
+
+
+ Q3. When is Greedy Best-First Search useful?
+
+Answer:
+
+Greedy Search is most useful when:
+- Fast decision-making is critical.
+- Any valid solution is acceptable.
+- Computational resources are limited.
+
+For example, a drone reacting to a sudden threat may prioritize finding a quick escape route rather than computing the absolute optimal path.
+
+
+
+ 16.3 A* Search
+
+ Q1. Explain the meaning of ( f(n) = g(n) + h(n) ).
+
+Answer:
+
+The A* evaluation function combines:
+
+ ( g(n) ): the actual cost already incurred.
+ ( h(n) ): the estimated remaining cost to the goal.
+
+Thus,
+
+[
+f(n) = g(n) + h(n)
+]
+
+represents the estimated total cost of a complete solution path passing through node ( n ).
+
+In the drone analogy:
+
+- ( g(n) ) is the battery energy already spent.
+- ( h(n) ) is the estimated energy still required.
+- ( f(n) ) is the estimated total energy for the entire trip.
+
+
+ Q2. Why should the goal test occur when a node is popped rather than generated?
+
+Answer:
+
+If the goal test is performed immediately when a goal node is generated, the algorithm may accept a suboptimal path before exploring cheaper alternatives.
+
+Waiting until the node is removed from the priority queue guarantees that it is the lowest-cost candidate currently available.
+
+This preserves A*'s optimality guarantees.
+
+
+
+ Q3. Why is the reached dictionary important in weighted environments?
+
+Answer:
+
+In weighted environments, the first path discovered to a state may not be the cheapest.
+
+A reached dictionary allows the algorithm to:
+
+* Store the best cost found so far for each state.
+* Replace a previously discovered path if a cheaper one is found later.
+
+Without this mechanism, A* could become stuck using unnecessarily expensive routes.
+
+
+ Q4. Why does A* usually outperform Uniform Cost Search (UCS)?
+
+Answer:
+
+Uniform Cost Search expands nodes solely according to accumulated cost and has no information about the goal location.
+
+A* uses heuristic guidance to focus the search toward promising regions.
+
+As a result:
+
+* A* typically expands far fewer nodes.
+* Memory usage is reduced.
+* Computation time is significantly lower.
+
+The performance difference demonstrates the value of incorporating domain knowledge through heuristics.
+
+
+
+ 16.4 Admissibility and Consistency
+
+ Q1. Define admissibility and consistency.
+
+Answer:
+
+Admissibility -
+
+A heuristic is admissible if it never overestimates the true cost to reach the goal.
+
+[
+h(n) \leq h^*(n)
+]
+
+where ( h^*(n) ) is the actual optimal remaining cost.
+
+
+Consistency (Monotonicity) - 
+
+A heuristic is consistent if, for every node transition,
+
+[
+h(n) \leq c(n,n') + h(n')
+]
+
+where:
+
+- ( c(n,n') ) is the step cost.
+- ( n' ) is a neighboring node.
+
+Consistency guarantees that estimated costs decrease smoothly along a path...
+
+
+ Q2. What did the inflated heuristic experiment demonstrate?
+
+Answer:
+
+The inflated heuristic produced a solution with a cost of 12, whereas the optimal path cost was 10.
+
+This demonstrates that when a heuristic overestimates the true cost, admissibility is violated and A* can no longer guarantee optimal solutions.
+
+
+
+ Q3. Is Manhattan distance consistent in this grid world?
+
+Answer:
+
+Yes.
+
+Moving one step in the grid changes the Manhattan distance by at most 1. Since every move costs at least 1 unit, the consistency condition always holds:
+
+[
+h(n) \leq c + h(n')
+]
+
+Therefore, Manhattan distance is a consistent heuristic for this problem.
+
+
+
+ 16.5 Weighted A* and Trade-Offs
+
+ Q1. How does changing the weight ( W ) affect Weighted A*?
+
+Answer:
+
+Weighted A* uses:
+
+[
+f(n) = g(n) + W \cdot h(n)
+]
+
+Behavior changes as follows:
+
+| Weight         | Behavior                            |
+| -------------- | ----------------------------------- |
+| (W = 0)        | Equivalent to Uniform Cost Search   |
+| (W = 1)        | Standard A* Search                  |
+| (W > 1)        | Increasingly heuristic-driven       |
+| (W \to \infty) | Approaches Greedy Best-First Search |
+
+Larger weights prioritize speed at the expense of optimality.
+
+
+
+ Q2. What is the suboptimality guarantee of Weighted A*?
+
+Answer:
+
+Weighted A* guarantees that the returned solution cost will not exceed:
+
+[
+W \times (\text{Optimal Cost})
+]
+
+For example:
+
+* Optimal Cost = 10
+* Weight = 3
+
+Maximum guaranteed solution cost:
+
+[
+3 \times 10 = 30
+]
+
+Since the experiment produced a path cost of 12, it remained comfortably within the theoretical bound.
+
+
+
+ Q3. Which algorithm would you choose for a drone with only 90 seconds of battery remaining?
+
+Answer:
+
+I would choose Weighted A* with a moderate weight (for example, ( W = 2 )).
+
+Reasons:
+
+* It finds solutions significantly faster than standard A*.
+* It still produces reasonably good paths.
+* A small loss in optimality is acceptable when battery life is critically limited.
+* Rapid decision-making is often more important than perfect optimization in emergency situations.
+
+
+
+ 16.6 Memory and Real-World Drone Context
+
+ Q1. Compare the memory requirements of A* and IDA*.
+
+Answer:
+
+**A***
+
+* Stores the entire frontier.
+* Maintains a large reached dictionary.
+* Consumes substantial memory.
+
+**IDA***
+
+* Uses depth-first search internally.
+* Stores only the current search path.
+* Requires much less memory.
+
+The trade-off is that IDA* repeatedly re-explores states, increasing computation time...
+
+
+
+ Q2. What real-world factors would make drone path planning more difficult?
+
+Answer:
+
+Several factors increase the complexity of real-world navigation:
+
+* Three-dimensional movement and altitude changes.
+* Dynamic wind conditions.
+* Variable energy consumption.
+* Temporary no-fly zones.
+* Moving obstacles.
+* Sensor uncertainty and noise.
+
+These factors make real-world path planning significantly more challenging than a simple grid environment.
+
+
+
+ Q3. What happens if the target moves?
+
+Answer:
+
+If the target moves:
+
+* The goal location changes over time.
+* Previously computed heuristic values may become inaccurate.
+* The planned path can become obsolete.
+
+To handle moving targets, algorithms such as Real-Time A* (RTA*) or continual replanning methods are often required.
+
+
+
+ Q4. Which algorithm would you deploy on a real drone?
+
+Answer:
+
+I would deploy Weighted A*.
+
+It provides a practical balance between:
+
+* Solution quality,
+* Computation speed,
+* Memory requirements,
+* Real-time responsiveness.
+
+In real robotic systems, obtaining a good solution quickly is usually more valuable than spending additional time searching for a perfectly optimal path...
